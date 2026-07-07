@@ -34,8 +34,32 @@ A Spring Boot 3 (Java 21) microservice that provides campaign insights for an Ad
              ▼                   ▼
         Cassandra       historical-data.json
                        (BigQuery in Production)
+                       
+```
+# Architecture
+
+```
+                    Client
+                       │
+                       ▼
+               Insights API Service
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+   RealtimeMetricsService   HistoricalMetricsService
+             │                   │
+             ▼                   ▼
+        Cassandra       historical-data.json
+                       (BigQuery in Production)
 ```
 
+## Solution Architecture
+
+![Solution Architecture](docs/images/architecture.png)
+
+## Deployment Overview
+
+![Deployment Overview](docs/images/deployment.png)
 ---
 
 # Features
