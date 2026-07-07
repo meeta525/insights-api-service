@@ -1,0 +1,30 @@
+[
+  {
+    "tenantId": "amazon",
+    "campaignId": "CAMP1001",
+    "clicks": 1820,
+    "impressions": 12600,
+    "clickToBasket": 365
+  },
+  {
+    "tenantId": "amazon",
+    "campaignId": "CAMP1002",
+    "clicks": 2945,
+    "impressions": 18900,
+    "clickToBasket": 582
+  },
+  {
+    "tenantId": "flipkart",
+    "campaignId": "CAMP1001",
+    "clicks": 2456,
+    "impressions": 20120,
+    "clickToBasket": 410
+  },
+  {
+    "tenantId": "flipkart",
+    "campaignId": "CAMP1002",
+    "clicks": 3510,
+    "impressions": 24700,
+    "clickToBasket": 694
+  }
+]
