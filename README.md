@@ -1,57 +1,31 @@
 # Campaign Insights API
 
-A Spring Boot 3 (Java 21) microservice that provides campaign insights for an AdTech platform. The service supports both real-time and historical queries, demonstrates multi-tenancy, retry handling for transient failures, and uses a containerized Cassandra instance for the realtime data store.
+The service supports both real-time and historical queries, demonstrates multi-tenancy, implements retry handling for transient failures, and uses a containerized Apache Cassandra instance as the real-time data store.
 
 ---
 
-# Technology Stack
+# Technology Choices
 
-| Component                         | Technology |
-|-----------------------------------|------------|
-| Language                          | Java 21 |
-| Framework                         | Spring Boot 3 |
-| Database                          | Apache Cassandra |
-| Historical Analytics Store (Demo) | JSON File (represents BigQuery in production) |
-| API Documentation                 | Swagger / OpenAPI |
-| Resilience                        | Resilience4j Retry |
-| Build Tool                        | Maven |
-| Containerization                  | Docker Compose |
+| Layer               | Technology                                  | Why Chosen                                                                                 |
+|---------------------|---------------------------------------------|--------------------------------------------------------------------------------------------|
+| API Gateway         | Kong / AWS API Gateway                      | Authentication, authorization, rate limiting, and request routing                          |
+| Load Balancer       | AWS ALB / HAProxy                           | Distributes incoming traffic across multiple service instances                             |
+| Backend Services    | Java 21, Spring Boot                        | Mature ecosystem, high performance, excellent support for microservices                    |
+| Event Streaming     | Apache Kafka                                | High-throughput, low-latency, durable event streaming with partitioning                    |
+| Stream Processing   | Spring Boot Kafka Consumers                 | Real-time validation, enrichment, deduplication, sessionization, and aggregation           |
+| Real-time Database  | Apache Cassandra                            | Horizontally scalable, write-optimized, low-latency reads for real-time aggregated metrics |
+| Analytics Warehouse | BigQuery                                    | Large-scale analytical queries and historical reporting                                    |
+| REST APIs           | Spring Boot REST                            | Exposes Insights APIs to dashboards and external clients                                   |
+| Containerization    | Docker                                      | Consistent packaging and deployment across environments                                    |
+| Orchestration       | Kubernetes                                  | Auto-scaling, self-healing, and rolling deployments                                        |
+| Monitoring          | Prometheus + Grafana                        | Metrics collection, dashboards, and alerting                                               |
+| Logging             | ELK Stack (Elasticsearch, Logstash, Kibana) | Centralized logging, search, and troubleshooting                                           |
+| CI/CD               | GitHub Actions / Jenkins                    | Automated build, test, and deployment                                                      |
+| Source Control      | GitHub                                      | Version control and code collaboration                                                     |
 
 ---
 
 # Architecture
-
-```
-                    Client
-                       │
-                       ▼
-               Insights API Service
-                       │
-             ┌─────────┴─────────┐
-             ▼                   ▼
-   RealtimeMetricsService   HistoricalMetricsService
-             │                   │
-             ▼                   ▼
-        Cassandra       historical-data.json
-                       (BigQuery in Production)
-                       
-```
-# Architecture
-
-```
-                    Client
-                       │
-                       ▼
-               Insights API Service
-                       │
-             ┌─────────┴─────────┐
-             ▼                   ▼
-   RealtimeMetricsService   HistoricalMetricsService
-             │                   │
-             ▼                   ▼
-        Cassandra       historical-data.json
-                       (BigQuery in Production)
-```
 
 ## Solution Architecture
 
@@ -60,6 +34,7 @@ A Spring Boot 3 (Java 21) microservice that provides campaign insights for an Ad
 ## Deployment Overview
 
 ![Deployment Overview](docs/images/deployment.png)
+
 ---
 
 # Features
@@ -86,11 +61,15 @@ src
 ├── model
 ├── exception
 ├── constant
-└── config
+├── config
+└── resources
+    └── historical-data.json
 
-docker
-├── schema.cql
-└── data.cql
+docker/
+└── cassandra/
+    ├── schema.cql
+    ├── data.cql
+    └── init.sh
 
 docker-compose.yml
 README.md
@@ -107,7 +86,12 @@ README.md
 ---
 
 # Running the Project
+### Clone the repository
 
+```bash
+git clone https://github.com/meeta525/insights-api-service.git
+cd insights-api-service
+```
 ### Start Cassandra
 
 ```bash
@@ -117,7 +101,7 @@ docker compose up -d
 ### Run Spring Boot
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 or run `InsightsApiApplication` from IntelliJ.
@@ -126,7 +110,9 @@ or run `InsightsApiApplication` from IntelliJ.
 
 # Swagger UI
 
-```
+After the application starts, open:
+
+```text
 http://localhost:8080/swagger-ui/index.html
 ```
 
@@ -134,17 +120,17 @@ http://localhost:8080/swagger-ui/index.html
 
 # Demo APIs
 
-## Realtime
+### Realtime
 
 Header
 
-```
+```http
 X-Tenant-Id: amazon
 ```
 
 Request
 
-```
+```http
 GET /ad/CAMP1001/clicks
 ```
 
@@ -154,13 +140,13 @@ GET /ad/CAMP1001/clicks
 
 Header
 
-```
+```http
 X-Tenant-Id: amazon
 ```
 
 Request
 
-```
+```http
 GET /ad/CAMP1001/clicks?from=2026-07-01&to=2026-07-07
 ```
 
@@ -178,8 +164,8 @@ GET /ad/CAMP1001/clicks?from=2026-07-01&to=2026-07-07
 ---
 
 # Retry Demo
-
-Stop Cassandra
+This demonstrates retry handling when the real-time Cassandra datastore is temporarily unavailable.
+### Stop Cassandra
 
 ```bash
 docker stop cassandra
@@ -225,7 +211,7 @@ Keeps responsibilities isolated.
 
 The assignment focuses on service design rather than cloud integration.
 
-The JSON file simulates historical analytics while keeping the project easy to run locally.
+The JSON file simulates historical data, allowing the project to run locally without requiring a cloud dependency. In production, this service would query BigQuery.
 
 ## Why Multi-tenancy?
 
